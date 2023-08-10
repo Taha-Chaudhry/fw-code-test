@@ -23,7 +23,6 @@ struct Article: Decodable {
 struct ArticleListView: View {
     let token: Token
     @StateObject private var viewModel = ArticlesViewModel()
-    @State private var showError: Bool = false
 
     var body: some View {
         NavigationView {
@@ -61,7 +60,6 @@ struct ArticleListView: View {
 
 struct ArticleRowView: View {
     var article: Article
-    @State private var isLoaded: Bool = false
     
     var body: some View {
         HStack {
@@ -119,15 +117,15 @@ class ArticlesViewModel: ObservableObject {
     
     private func preloadImages(for articles: [Article]) {
         for article in articles {
-            guard loadedImages[article.thumbnail_url] == nil else {
+            let imageUrl = article.thumbnail_template_url.replacingOccurrences(of: ":width", with: "1000", options: .literal, range: nil).replacingOccurrences(of: ":height", with: "1000", options: .literal, range: nil)
+            guard loadedImages[imageUrl] == nil else {
                 continue
             }
             
-            if let url = URL(string: article.thumbnail_url) {
+            if let url = URL(string: imageUrl) {
                 URLSession.shared.dataTask(with: url) { data, _, _ in
-                    
                     if let data = data, let image = UIImage(data: data) {
-                        self.loadedImages[article.thumbnail_url] = image
+                        self.loadedImages[imageUrl] = image
                     }
                 }.resume()
             }
